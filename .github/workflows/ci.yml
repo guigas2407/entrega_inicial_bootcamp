@@ -1,16 +1,29 @@
-name: Node.js CI
+name: Validacao ApoioMicro CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+    branches: ["main", "master"]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js
+      - name: Baixar o código do repositório
+        uses: actions/checkout@v3
+
+      - name: Configurar o Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
-      - run: npm install
-      - run: npm run lint # Executa o linter
-      - run: npm test # Executa os testes automatizados
+          node-version: "18.x"
+
+      - name: Instalar Dependências
+        run: npm install
+
+      - name: Executar Análise Estática (Linting)
+        run: npm run lint
+
+      - name: Executar Testes Automatizados
+        run: npm test
