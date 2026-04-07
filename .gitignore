@@ -1,0 +1,23 @@
+# Dependências do Node.js (Isso é o mais importante!)
+node_modules/
+
+# Arquivos de log de erros do NPM
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Pasta de cobertura de testes (caso você configure o Jest para gerar relatórios)
+coverage/
+
+# Arquivos de variáveis de ambiente (onde ficam senhas e chaves secretas, se usar no futuro)
+.env
+.env.test
+.env.production
+
+# Arquivos de sistema operacional (Windows e macOS)
+.DS_Store
+Thumbs.db
+
+# Configurações de editores de código (como o VS Code)
+.vscode/
+.idea/
