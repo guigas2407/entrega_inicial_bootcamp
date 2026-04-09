@@ -13,64 +13,71 @@
             <p>Ajudando pequenos negócios a cobrar o preço justo.</p>
         </header>
 
-        <section class="card">
-            <h2>📍 Dados do Cliente (ViaCEP)</h2>
-            <div class="input-group">
-                <label for="cep">Digite o CEP:</label>
-                <div class="cep-flex">
-                    <input type="text" id="cep" placeholder="Ex: 01001-000">
-                    <button id="btn-buscar-cep">Buscar</button>
-                </div>
-            </div>
-            <div id="resultado-endereco" class="hidden alert-info">
-                </div>
-        </section>
-
-        <section class="card">
-            <h2>💰 Calculadora de Precificação</h2>
+        <div class="layout-duas-colunas">
             
-            <div class="input-group">
-                <label for="materiais">Custo de Materiais (R$):</label>
-                <input type="number" id="materiais" placeholder="Ex: 50.00" min="0" step="0.01">
+            <div class="coluna-esquerda">
+                <section class="card">
+                    <h2>💰 Calculadora de Precificação</h2>
+                    
+                    <div class="input-group">
+                        <label for="materiais">Custo de Materiais (R$):</label>
+                        <input type="number" id="materiais" placeholder="Ex: 50.00" min="0" step="0.01">
+                    </div>
+        
+                    <div class="input-group">
+                        <label for="horas">Horas Trabalhadas:</label>
+                        <input type="number" id="horas" placeholder="Ex: 2" min="0">
+                    </div>
+        
+                    <div class="input-group">
+                        <label for="valor-hora">Valor da sua Hora (R$):</label>
+                        <input type="number" id="valor-hora" placeholder="Ex: 20.00" min="0" step="0.01">
+                    </div>
+        
+                    <div class="input-group">
+                        <label for="margem">Margem de Lucro Desejada (%):</label>
+                        <input type="number" id="margem" placeholder="Ex: 20" min="0" max="99">
+                    </div>
+        
+                    <button id="btn-calcular" class="btn-primary">Calcular Preço de Venda</button>
+        
+                    <div id="mensagem-erro" class="hidden alert-danger"></div>
+                </section>
             </div>
 
-            <div class="input-group">
-                <label for="horas">Horas Trabalhadas:</label>
-                <input type="number" id="horas" placeholder="Ex: 2" min="0">
+            <div class="coluna-direita">
+                <section class="card">
+                    <h2>📍 Dados do Cliente (ViaCEP)</h2>
+                    <div class="input-group">
+                        <label for="cep">Digite o CEP:</label>
+                        <div class="cep-flex">
+                            <input type="text" id="cep" placeholder="Ex: 01001-000">
+                            <button id="btn-buscar-cep">Buscar</button>
+                        </div>
+                    </div>
+                    <div id="resultado-endereco" class="hidden alert-info">
+                        </div>
+                </section>
+        
+                <section id="resultado-calculo" class="card hidden">
+                    <h2>📊 Resumo do Orçamento</h2>
+                    <div class="resultado-item">
+                        <span>Custo Total:</span>
+                        <strong id="res-custo">R$ 0,00</strong>
+                    </div>
+                    <div class="resultado-item">
+                        <span>Lucro Bruto:</span>
+                        <strong id="res-lucro" class="texto-verde">R$ 0,00</strong>
+                    </div>
+                    <hr>
+                    <div class="resultado-item destaque">
+                        <span>Preço de Venda Sugerido:</span>
+                        <strong id="res-preco" class="texto-azul">R$ 0,00</strong>
+                    </div>
+                </section>
             </div>
-
-            <div class="input-group">
-                <label for="valor-hora">Valor da sua Hora (R$):</label>
-                <input type="number" id="valor-hora" placeholder="Ex: 20.00" min="0" step="0.01">
-            </div>
-
-            <div class="input-group">
-                <label for="margem">Margem de Lucro Desejada (%):</label>
-                <input type="number" id="margem" placeholder="Ex: 20" min="0" max="99">
-            </div>
-
-            <button id="btn-calcular" class="btn-primary">Calcular Preço de Venda</button>
-
-            <div id="mensagem-erro" class="hidden alert-danger"></div>
-        </section>
-
-        <section id="resultado-calculo" class="card hidden">
-            <h2>📊 Resumo do Orçamento</h2>
-            <div class="resultado-item">
-                <span>Custo Total:</span>
-                <strong id="res-custo">R$ 0,00</strong>
-            </div>
-            <div class="resultado-item">
-                <span>Lucro Bruto:</span>
-                <strong id="res-lucro" class="texto-verde">R$ 0,00</strong>
-            </div>
-            <hr>
-            <div class="resultado-item destaque">
-                <span>Preço de Venda Sugerido:</span>
-                <strong id="res-preco" class="texto-azul">R$ 0,00</strong>
-            </div>
-        </section>
-    </div>
+            
+        </div> </div>
 
     <script src="script.js"></script>
 </body>

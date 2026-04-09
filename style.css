@@ -11,7 +11,7 @@ body {
 }
 
 .container {
-    max-width: 600px;
+    max-width: 900px;
     margin: 0 auto;
 }
 
@@ -30,7 +30,6 @@ header h1 {
     padding: 25px;
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    margin-bottom: 20px;
 }
 
 h2 {
@@ -122,3 +121,26 @@ button:hover { background-color: #1a252f; }
 
 .texto-verde { color: #27ae60; }
 .texto-azul { color: #2980b9; }
+
+.layout-duas-colunas {
+    display: flex;
+    gap: 20px; 
+    align-items: flex-start; 
+}
+
+.coluna-esquerda {
+    flex: 1; 
+}
+
+.coluna-direita {
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    gap: 20px; 
+}
+
+@media (max-width: 768px) {
+    .layout-duas-colunas {
+        flex-direction: column;
+    }
+}
