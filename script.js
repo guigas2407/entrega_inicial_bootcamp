@@ -1,4 +1,24 @@
-// --- 1. LÓGICA DO VIACEP ---
+// --- 1. LÓGICA DO VIACEP E FRETE ---
+
+// Função que simula o valor do frete com base no Estado (Origem: Brasília - DF)
+function estimarFrete(ufDestino) {
+    const precosPorRegiao = {
+        // Centro-Oeste e DF
+        'DF': 15.00, 'GO': 20.00, 'MT': 25.00, 'MS': 25.00,
+        // Sudeste
+        'SP': 30.00, 'RJ': 30.00, 'MG': 30.00, 'ES': 35.00,
+        // Sul
+        'PR': 40.00, 'SC': 40.00, 'RS': 45.00,
+        // Nordeste
+        'BA': 50.00, 'PE': 50.00, 'CE': 50.00, 'RN': 50.00, 'PB': 50.00, 'AL': 50.00, 'SE': 50.00, 'PI': 55.00, 'MA': 55.00,
+        // Norte
+        'TO': 45.00, 'PA': 60.00, 'AM': 65.00, 'RO': 65.00, 'AC': 70.00, 'RR': 70.00, 'AP': 70.00
+    };
+
+    // Se a sigla existir na lista, retorna o valor. Se der algum erro, cobra uma taxa padrão de R$ 70,00 para que não haja prejuízo.
+    return precosPorRegiao[ufDestino] || 70.00; 
+}
+
 document.getElementById('btn-buscar-cep').addEventListener('click', async () => {
     const cep = document.getElementById('cep').value;
     const divResultado = document.getElementById('resultado-endereco');
@@ -6,7 +26,7 @@ document.getElementById('btn-buscar-cep').addEventListener('click', async () => 
     if (!cep) return alert("Por favor, digite um CEP.");
 
     divResultado.classList.remove('hidden');
-    divResultado.innerHTML = "⏳ Buscando endereço...";
+    divResultado.innerHTML = "⏳ Buscando endereço e calculando frete...";
 
     try {
         const cepLimpo = cep.replace(/\D/g, '');
@@ -15,9 +35,19 @@ document.getElementById('btn-buscar-cep').addEventListener('click', async () => 
 
         if (dados.erro) throw new Error("CEP não encontrado.");
 
-        divResultado.innerHTML = `<strong>Endereço de entrega:</strong><br>
-                                  ${dados.logradouro}, Bairro ${dados.bairro}<br>
-                                  ${dados.localidade} - ${dados.uf}`;
+        // Chama a nossa nova função de frete passando o Estado que a API retornou
+        const valorFrete = estimarFrete(dados.uf);
+        
+        // Formata o valor do frete para o padrão de dinheiro do Brasil (R$)
+        const freteFormatado = valorFrete.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        divResultado.innerHTML = `
+            <strong>Endereço de entrega:</strong><br>
+            ${dados.logradouro}, Bairro ${dados.bairro}<br>
+            ${dados.localidade} - ${dados.uf}<br><br>
+            <strong style="color: #2980b9;">🚚 Estimativa de Frete (Saindo de BSB):</strong><br> 
+            ${freteFormatado}
+        `;
     } catch (erro) {
         divResultado.innerHTML = `❌ Erro: ${erro.message}`;
     }
