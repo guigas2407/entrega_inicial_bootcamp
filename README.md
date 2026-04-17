@@ -3,7 +3,7 @@
 ![Badge de Versão](https://img.shields.io/badge/version-1.1.0-blue)
 ![Status do Workflow](https://img.shields.io/github/actions/workflow/status/guigas2407/entrega_inicial_bootcamp/ci.yml)
 
-🚀 **Acesse a aplicação online:** [COLE SEU LINK DO GITHUB PAGES AQUI]
+🚀 **Acesse a aplicação online:** https://guigas2407.github.io/entrega_inicial_bootcamp/
 
 ## 🎯 Descrição do Problema Real
 
@@ -35,7 +35,7 @@ O **ApoioMicro** evoluiu para uma aplicação Web moderna, intuitiva e responsiv
 
 ## 🚀 Como Acessar e Executar
 
-A forma mais fácil de utilizar o ApoioMicro é acessando a nossa [versão online pelo GitHub Pages]([COLE SEU LINK DO GITHUB PAGES AQUI]).
+A forma mais fácil de utilizar o ApoioMicro é acessando a nossa [versão online pelo GitHub Pages](https://guigas2407.github.io/entrega_inicial_bootcamp/).
 
 **Para desenvolvedores (Executando localmente e rodando testes):**
 É necessário ter o [Node.js](https://nodejs.org/) instalado.
