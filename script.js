@@ -1,3 +1,20 @@
+// --- CONFIGURAÇÃO DO SUPABASE (FRONTEND) ---
+const SUPABASE_URL = window.SUPABASE_URL || localStorage.getItem('SUPABASE_URL') || "SUA_URL_SUPABASE";
+const SUPABASE_KEY = window.SUPABASE_KEY || localStorage.getItem('SUPABASE_KEY') || "SUA_KEY_SUPABASE";
+
+let supabaseClient = null;
+
+if (typeof supabase !== 'undefined' && SUPABASE_URL && SUPABASE_KEY && SUPABASE_URL !== "SUA_URL_SUPABASE" && SUPABASE_KEY !== "SUA_KEY_SUPABASE") {
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log("⚡ Supabase inicializado com sucesso no frontend!");
+} else {
+    console.warn("⚠️ Supabase não configurado no frontend. Para salvar os dados, defina SUPABASE_URL e SUPABASE_KEY no script.js ou via localStorage.");
+}
+
+// Variáveis para armazenar temporariamente o endereço buscado
+let ultimoCep = '';
+let ultimoEndereco = '';
+
 // --- 1. LÓGICA DO VIACEP ---
 document.getElementById('btn-buscar-cep').addEventListener('click', async () => {
     const cep = document.getElementById('cep').value;
@@ -14,6 +31,9 @@ document.getElementById('btn-buscar-cep').addEventListener('click', async () => 
         const dados = await response.json();
 
         if (dados.erro) throw new Error("CEP não encontrado.");
+
+        ultimoCep = cepLimpo;
+        ultimoEndereco = `${dados.logradouro}, ${dados.bairro}, ${dados.localidade} - ${dados.uf}`;
 
         divResultado.innerHTML = `<strong>Endereço de entrega:</strong><br>
                                   ${dados.logradouro}, Bairro ${dados.bairro}<br>
@@ -57,6 +77,29 @@ document.getElementById('btn-calcular').addEventListener('click', () => {
         // Esconde a mensagem de erro e mostra os resultados
         msgErro.classList.add('hidden');
         painelResultado.classList.remove('hidden');
+
+        // Gravar no Supabase se configurado
+        if (supabaseClient) {
+            supabaseClient.from('historico_calculos').insert([
+                {
+                    custo_materiais: materiais,
+                    horas_trabalhadas: horas,
+                    valor_hora: valorHora,
+                    margem_lucro: margem,
+                    custo_total: custoTotal,
+                    lucro_bruto: lucroBruto,
+                    preco_sugerido: precoSugerido,
+                    cep: ultimoCep || null,
+                    endereco_completo: ultimoEndereco || null
+                }
+            ]).then(({ error }) => {
+                if (error) {
+                    console.error("Erro ao salvar no Supabase:", error.message);
+                } else {
+                    console.log("Cálculo salvo com sucesso no Supabase!");
+                }
+            });
+        }
 
     } catch (erro) {
         // Se der erro, esconde os resultados e mostra o alerta vermelho
