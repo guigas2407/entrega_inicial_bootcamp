@@ -2,6 +2,7 @@
 
 const inquirer = require('inquirer');
 const { calcularPrecoVenda } = require('./calculator');
+const { salvarCalculo } = require('./supabaseClient');
 
 async function iniciarSistema() {
     console.log("==========================================");
@@ -44,6 +45,17 @@ async function iniciarSistema() {
         console.log(`Lucro Bruto:      R$ ${resultado.lucroBruto.toFixed(2)}`);
         console.log(`PREÇO SUGERIDO:   R$ ${resultado.precoSugerido.toFixed(2)}`);
         console.log("----------------------------------------\n");
+
+        // Salvar no Supabase (se configurado)
+        await salvarCalculo({
+            custoMateriais: respostas.custoMateriais,
+            horasTrabalhadas: respostas.horasTrabalhadas,
+            valorHora: respostas.valorHora,
+            margemLucro: respostas.margemLucro,
+            custoTotal: resultado.custoTotal,
+            lucroBruto: resultado.lucroBruto,
+            precoSugerido: resultado.precoSugerido
+        });
     } catch (error) {
         console.error(`\n❌ Erro: ${error.message}\n`);
     }
