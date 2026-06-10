@@ -32,14 +32,13 @@ function estimarFrete(ufDestino) {
         'TO': 45.00, 'PA': 60.00, 'AM': 65.00, 'RO': 65.00, 'AC': 70.00, 'RR': 70.00, 'AP': 70.00
     };
 
-    // Se a sigla existir na lista, retorna o valor. Se der algum erro, cobra uma taxa padrão de R$ 70,00 para que não haja prejuízo.
     return precosPorRegiao[ufDestino] || 70.00;
 }
 
 document.getElementById('btn-buscar-cep').addEventListener('click', async () => {
     const cep = document.getElementById('cep').value;
     const divResultado = document.getElementById('resultado-endereco');
-    
+
     if (!cep) return alert("Por favor, digite um CEP.");
 
     divResultado.classList.remove('hidden');
@@ -56,17 +55,15 @@ document.getElementById('btn-buscar-cep').addEventListener('click', async () => 
         ultimoCep = cepLimpo;
         ultimoEndereco = `${dados.logradouro}, ${dados.bairro}, ${dados.localidade} - ${dados.uf}`;
 
-        // Chama a nossa função de frete passando o Estado que a API retornou
+        // Chama a função de frete passando o Estado que a API retornou
         const valorFrete = estimarFrete(dados.uf);
-        
-        // Formata o valor do frete para o padrão de dinheiro do Brasil (R$)
         const freteFormatado = valorFrete.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
         divResultado.innerHTML = `
             <strong>Endereço de entrega:</strong><br>
             ${dados.logradouro}, Bairro ${dados.bairro}<br>
             ${dados.localidade} - ${dados.uf}<br><br>
-            <strong style="color: #2980b9;">🚚 Estimativa de Frete (Saindo de BSB):</strong><br> 
+            <strong style="color: #2980b9;">🚚 Estimativa de Frete (Saindo de BSB):</strong><br>
             ${freteFormatado}
         `;
     } catch (erro) {
@@ -76,8 +73,8 @@ document.getElementById('btn-buscar-cep').addEventListener('click', async () => 
 
 
 // --- 2. LÓGICA DA CALCULADORA ---
-document.getElementById('btn-calcular').addEventListener('click', () => {
-    // Pega os valores digitados na tela
+document.getElementById('btn-calcular').addEventListener('click', async () => {
+    const nomeProduto = document.getElementById('nome-produto').value.trim() || 'Sem nome';
     const materiais = parseFloat(document.getElementById('materiais').value) || 0;
     const horas = parseFloat(document.getElementById('horas').value) || 0;
     const valorHora = parseFloat(document.getElementById('valor-hora').value) || 0;
@@ -87,7 +84,6 @@ document.getElementById('btn-calcular').addEventListener('click', () => {
     const painelResultado = document.getElementById('resultado-calculo');
 
     try {
-        // Validação igual a do seu teste!
         if (materiais < 0 || horas < 0 || valorHora < 0 || margem < 0) {
             throw new Error("Os valores não podem ser negativos.");
         }
@@ -95,24 +91,27 @@ document.getElementById('btn-calcular').addEventListener('click', () => {
             throw new Error("A margem de lucro não pode ser 100% ou maior nesta fórmula.");
         }
 
-        // Os cálculos originais da sua calculadora
         const custoTotal = materiais + (horas * valorHora);
         const precoSugerido = custoTotal / (1 - (margem / 100));
         const lucroBruto = precoSugerido - custoTotal;
 
-        // Mostra na tela formatado como Dinheiro (BRL)
+        // Exibe o nome do produto no resumo
+        const resNome = document.getElementById('res-nome-produto');
+        resNome.textContent = `📦 ${nomeProduto}`;
+        resNome.classList.remove('hidden');
+
         document.getElementById('res-custo').innerText = custoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         document.getElementById('res-lucro').innerText = lucroBruto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         document.getElementById('res-preco').innerText = precoSugerido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-        // Esconde a mensagem de erro e mostra os resultados
         msgErro.classList.add('hidden');
         painelResultado.classList.remove('hidden');
 
         // Gravar no Supabase se configurado
         if (supabaseClient) {
-            supabaseClient.from('historico_calculos').insert([
+            const { error } = await supabaseClient.from('historico_calculos').insert([
                 {
+                    nome_produto: nomeProduto,
                     custo_materiais: materiais,
                     horas_trabalhadas: horas,
                     valor_hora: valorHora,
@@ -123,19 +122,133 @@ document.getElementById('btn-calcular').addEventListener('click', () => {
                     cep: ultimoCep || null,
                     endereco_completo: ultimoEndereco || null
                 }
-            ]).then(({ error }) => {
-                if (error) {
-                    console.error("Erro ao salvar no Supabase:", error.message);
-                } else {
-                    console.log("Cálculo salvo com sucesso no Supabase!");
-                }
-            });
+            ]);
+
+            if (error) {
+                console.error("Erro ao salvar no Supabase:", error.message);
+            } else {
+                console.log("Cálculo salvo com sucesso no Supabase!");
+                carregarHistorico(); // Atualiza o histórico automaticamente
+            }
         }
 
     } catch (erro) {
-        // Se der erro, esconde os resultados e mostra o alerta vermelho
         painelResultado.classList.add('hidden');
         msgErro.innerText = erro.message;
         msgErro.classList.remove('hidden');
     }
 });
+
+
+// --- 3. HISTÓRICO DE ORÇAMENTOS ---
+
+/**
+ * Formata uma data ISO em formato brasileiro legível.
+ * Ex: "2024-01-15T10:30:00Z" → "15/01/2024 às 07:30"
+ */
+function formatarData(dataISO) {
+    if (!dataISO) return '-';
+    const data = new Date(dataISO);
+    return data.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+/**
+ * Carrega os orçamentos salvos no Supabase e renderiza na tabela.
+ */
+async function carregarHistorico() {
+    const secaoHistorico = document.getElementById('secao-historico');
+    const loading = document.getElementById('historico-loading');
+    const vazio = document.getElementById('historico-vazio');
+    const erroDiv = document.getElementById('historico-erro');
+    const tabela = document.getElementById('tabela-historico');
+    const tbody = document.getElementById('historico-tbody');
+
+    // Só exibe a seção se o Supabase estiver configurado
+    if (!supabaseClient) {
+        return;
+    }
+
+    secaoHistorico.classList.remove('hidden');
+    loading.classList.remove('hidden');
+    vazio.classList.add('hidden');
+    erroDiv.classList.add('hidden');
+    tabela.classList.add('hidden');
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('historico_calculos')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        loading.classList.add('hidden');
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            vazio.classList.remove('hidden');
+            return;
+        }
+
+        // Renderiza as linhas da tabela
+        tbody.innerHTML = '';
+        data.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="td-nome">${item.nome_produto || '-'}</td>
+                <td>${(item.custo_total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                <td class="td-preco">${(item.preco_sugerido || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                <td>${item.margem_lucro || 0}%</td>
+                <td class="td-endereco">${item.endereco_completo || '-'}</td>
+                <td class="td-data">${formatarData(item.created_at)}</td>
+                <td>
+                    <button class="btn-deletar" data-id="${item.id}" title="Excluir orçamento">🗑️</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Adiciona evento de deletar em cada botão
+        document.querySelectorAll('.btn-deletar').forEach(btn => {
+            btn.addEventListener('click', () => deletarOrcamento(btn.dataset.id));
+        });
+
+        tabela.classList.remove('hidden');
+
+    } catch (erro) {
+        loading.classList.add('hidden');
+        erroDiv.textContent = `❌ Erro ao carregar histórico: ${erro.message}`;
+        erroDiv.classList.remove('hidden');
+    }
+}
+
+/**
+ * Deleta um orçamento pelo ID no Supabase e recarrega o histórico.
+ */
+async function deletarOrcamento(id) {
+    if (!supabaseClient) return;
+    if (!confirm("Deseja realmente excluir este orçamento?")) return;
+
+    const { error } = await supabaseClient
+        .from('historico_calculos')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        alert(`Erro ao excluir: ${error.message}`);
+    } else {
+        carregarHistorico();
+    }
+}
+
+// Botão de atualizar histórico manualmente
+document.getElementById('btn-atualizar-historico').addEventListener('click', carregarHistorico);
+
+// Carrega o histórico ao iniciar a página
+carregarHistorico();
