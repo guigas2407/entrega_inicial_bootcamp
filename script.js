@@ -1,3 +1,20 @@
+// --- CONFIGURAÇÃO DO SUPABASE (FRONTEND) ---
+const SUPABASE_URL = window.SUPABASE_URL || localStorage.getItem('SUPABASE_URL') || "SUA_URL_SUPABASE";
+const SUPABASE_KEY = window.SUPABASE_KEY || localStorage.getItem('SUPABASE_KEY') || "SUA_KEY_SUPABASE";
+
+let supabaseClient = null;
+
+if (typeof supabase !== 'undefined' && SUPABASE_URL && SUPABASE_KEY && SUPABASE_URL !== "SUA_URL_SUPABASE" && SUPABASE_KEY !== "SUA_KEY_SUPABASE") {
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log("⚡ Supabase inicializado com sucesso no frontend!");
+} else {
+    console.warn("⚠️ Supabase não configurado no frontend. Para salvar os dados, defina SUPABASE_URL e SUPABASE_KEY no script.js ou via localStorage.");
+}
+
+// Variáveis para armazenar temporariamente o endereço buscado
+let ultimoCep = '';
+let ultimoEndereco = '';
+
 // --- 1. LÓGICA DO VIACEP E FRETE ---
 
 // Função que simula o valor do frete com base no Estado (Origem: Brasília - DF)
@@ -16,7 +33,7 @@ function estimarFrete(ufDestino) {
     };
 
     // Se a sigla existir na lista, retorna o valor. Se der algum erro, cobra uma taxa padrão de R$ 70,00 para que não haja prejuízo.
-    return precosPorRegiao[ufDestino] || 70.00; 
+    return precosPorRegiao[ufDestino] || 70.00;
 }
 
 document.getElementById('btn-buscar-cep').addEventListener('click', async () => {
@@ -35,7 +52,11 @@ document.getElementById('btn-buscar-cep').addEventListener('click', async () => 
 
         if (dados.erro) throw new Error("CEP não encontrado.");
 
-        // Chama a nossa nova função de frete passando o Estado que a API retornou
+        // Salva o CEP e endereço para uso no Supabase
+        ultimoCep = cepLimpo;
+        ultimoEndereco = `${dados.logradouro}, ${dados.bairro}, ${dados.localidade} - ${dados.uf}`;
+
+        // Chama a nossa função de frete passando o Estado que a API retornou
         const valorFrete = estimarFrete(dados.uf);
         
         // Formata o valor do frete para o padrão de dinheiro do Brasil (R$)
@@ -87,6 +108,29 @@ document.getElementById('btn-calcular').addEventListener('click', () => {
         // Esconde a mensagem de erro e mostra os resultados
         msgErro.classList.add('hidden');
         painelResultado.classList.remove('hidden');
+
+        // Gravar no Supabase se configurado
+        if (supabaseClient) {
+            supabaseClient.from('historico_calculos').insert([
+                {
+                    custo_materiais: materiais,
+                    horas_trabalhadas: horas,
+                    valor_hora: valorHora,
+                    margem_lucro: margem,
+                    custo_total: custoTotal,
+                    lucro_bruto: lucroBruto,
+                    preco_sugerido: precoSugerido,
+                    cep: ultimoCep || null,
+                    endereco_completo: ultimoEndereco || null
+                }
+            ]).then(({ error }) => {
+                if (error) {
+                    console.error("Erro ao salvar no Supabase:", error.message);
+                } else {
+                    console.log("Cálculo salvo com sucesso no Supabase!");
+                }
+            });
+        }
 
     } catch (erro) {
         // Se der erro, esconde os resultados e mostra o alerta vermelho
