@@ -5,12 +5,12 @@
 // Configurações do Projeto → Seus apps → SDK Config
 // =========================================================
 const firebaseConfig = {
-    apiKey:            "COLE_AQUI_O_apiKey",
-    authDomain:        "COLE_AQUI_O_authDomain",
-    projectId:         "COLE_AQUI_O_projectId",
-    storageBucket:     "COLE_AQUI_O_storageBucket",
-    messagingSenderId: "COLE_AQUI_O_messagingSenderId",
-    appId:             "COLE_AQUI_O_appId"
+    apiKey:            "AIzaSyCiApZxn4gav9ZAAc4f7a-EpAUxa0pzar4",
+    authDomain:        "apoiomicro.firebaseapp.com",
+    projectId:         "apoiomicro",
+    storageBucket:     "apoiomicro.firebasestorage.app",
+    messagingSenderId: "968097490171",
+    appId:             "1:968097490171:web:086d0bd341f9d1549abc5e"
 };
 
 // Inicializa o Firebase e o Firestore
