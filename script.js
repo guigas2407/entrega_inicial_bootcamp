@@ -1,15 +1,32 @@
-// --- CONFIGURAÇÃO DO SUPABASE (FRONTEND) ---
-const SUPABASE_URL = window.SUPABASE_URL || localStorage.getItem('SUPABASE_URL') || "SUA_URL_SUPABASE";
-const SUPABASE_KEY = window.SUPABASE_KEY || localStorage.getItem('SUPABASE_KEY') || "SUA_KEY_SUPABASE";
+// =========================================================
+// --- CONFIGURAÇÃO DO FIREBASE ---
+// Substitua os valores abaixo com os dados do seu projeto.
+// Você os encontra em: Firebase Console → Seu Projeto →
+// Configurações do Projeto → Seus apps → SDK Config
+// =========================================================
+const firebaseConfig = {
+    apiKey:            "COLE_AQUI_O_apiKey",
+    authDomain:        "COLE_AQUI_O_authDomain",
+    projectId:         "COLE_AQUI_O_projectId",
+    storageBucket:     "COLE_AQUI_O_storageBucket",
+    messagingSenderId: "COLE_AQUI_O_messagingSenderId",
+    appId:             "COLE_AQUI_O_appId"
+};
 
-let supabaseClient = null;
+// Inicializa o Firebase e o Firestore
+let db = null;
 
-if (typeof supabase !== 'undefined' && SUPABASE_URL && SUPABASE_KEY && SUPABASE_URL !== "SUA_URL_SUPABASE" && SUPABASE_KEY !== "SUA_KEY_SUPABASE") {
-    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    console.log("⚡ Supabase inicializado com sucesso no frontend!");
+const configValida = Object.values(firebaseConfig).every(v => !v.startsWith("COLE_AQUI"));
+
+if (configValida) {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    console.log("🔥 Firebase inicializado com sucesso!");
 } else {
-    console.warn("⚠️ Supabase não configurado no frontend. Para salvar os dados, defina SUPABASE_URL e SUPABASE_KEY no script.js ou via localStorage.");
+    console.warn("⚠️ Firebase não configurado. Preencha o firebaseConfig no script.js.");
 }
+
+// =========================================================
 
 // Variáveis para armazenar temporariamente o endereço buscado
 let ultimoCep = '';
@@ -51,11 +68,9 @@ document.getElementById('btn-buscar-cep').addEventListener('click', async () => 
 
         if (dados.erro) throw new Error("CEP não encontrado.");
 
-        // Salva o CEP e endereço para uso no Supabase
         ultimoCep = cepLimpo;
         ultimoEndereco = `${dados.logradouro}, ${dados.bairro}, ${dados.localidade} - ${dados.uf}`;
 
-        // Chama a função de frete passando o Estado que a API retornou
         const valorFrete = estimarFrete(dados.uf);
         const freteFormatado = valorFrete.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -75,12 +90,12 @@ document.getElementById('btn-buscar-cep').addEventListener('click', async () => 
 // --- 2. LÓGICA DA CALCULADORA ---
 document.getElementById('btn-calcular').addEventListener('click', async () => {
     const nomeProduto = document.getElementById('nome-produto').value.trim() || 'Sem nome';
-    const materiais = parseFloat(document.getElementById('materiais').value) || 0;
-    const horas = parseFloat(document.getElementById('horas').value) || 0;
-    const valorHora = parseFloat(document.getElementById('valor-hora').value) || 0;
-    const margem = parseFloat(document.getElementById('margem').value) || 0;
+    const materiais   = parseFloat(document.getElementById('materiais').value)   || 0;
+    const horas       = parseFloat(document.getElementById('horas').value)       || 0;
+    const valorHora   = parseFloat(document.getElementById('valor-hora').value)  || 0;
+    const margem      = parseFloat(document.getElementById('margem').value)      || 0;
 
-    const msgErro = document.getElementById('mensagem-erro');
+    const msgErro       = document.getElementById('mensagem-erro');
     const painelResultado = document.getElementById('resultado-calculo');
 
     try {
@@ -91,45 +106,38 @@ document.getElementById('btn-calcular').addEventListener('click', async () => {
             throw new Error("A margem de lucro não pode ser 100% ou maior nesta fórmula.");
         }
 
-        const custoTotal = materiais + (horas * valorHora);
+        const custoTotal    = materiais + (horas * valorHora);
         const precoSugerido = custoTotal / (1 - (margem / 100));
-        const lucroBruto = precoSugerido - custoTotal;
+        const lucroBruto    = precoSugerido - custoTotal;
 
         // Exibe o nome do produto no resumo
         const resNome = document.getElementById('res-nome-produto');
         resNome.textContent = `📦 ${nomeProduto}`;
-        resNome.classList.remove('hidden');
 
-        document.getElementById('res-custo').innerText = custoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        document.getElementById('res-lucro').innerText = lucroBruto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        document.getElementById('res-preco').innerText = precoSugerido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        document.getElementById('res-custo').innerText  = custoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        document.getElementById('res-lucro').innerText  = lucroBruto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        document.getElementById('res-preco').innerText  = precoSugerido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
         msgErro.classList.add('hidden');
         painelResultado.classList.remove('hidden');
 
-        // Gravar no Supabase se configurado
-        if (supabaseClient) {
-            const { error } = await supabaseClient.from('historico_calculos').insert([
-                {
-                    nome_produto: nomeProduto,
-                    custo_materiais: materiais,
-                    horas_trabalhadas: horas,
-                    valor_hora: valorHora,
-                    margem_lucro: margem,
-                    custo_total: custoTotal,
-                    lucro_bruto: lucroBruto,
-                    preco_sugerido: precoSugerido,
-                    cep: ultimoCep || null,
-                    endereco_completo: ultimoEndereco || null
-                }
-            ]);
-
-            if (error) {
-                console.error("Erro ao salvar no Supabase:", error.message);
-            } else {
-                console.log("Cálculo salvo com sucesso no Supabase!");
-                carregarHistorico(); // Atualiza o histórico automaticamente
-            }
+        // Salva no Firebase Firestore
+        if (db) {
+            await db.collection('historico_calculos').add({
+                nome_produto:      nomeProduto,
+                custo_materiais:   materiais,
+                horas_trabalhadas: horas,
+                valor_hora:        valorHora,
+                margem_lucro:      margem,
+                custo_total:       custoTotal,
+                lucro_bruto:       lucroBruto,
+                preco_sugerido:    precoSugerido,
+                cep:               ultimoCep       || null,
+                endereco_completo: ultimoEndereco  || null,
+                created_at:        firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log("✅ Orçamento salvo no Firebase!");
+            carregarHistorico();
         }
 
     } catch (erro) {
@@ -143,36 +151,29 @@ document.getElementById('btn-calcular').addEventListener('click', async () => {
 // --- 3. HISTÓRICO DE ORÇAMENTOS ---
 
 /**
- * Formata uma data ISO em formato brasileiro legível.
- * Ex: "2024-01-15T10:30:00Z" → "15/01/2024 às 07:30"
+ * Formata um Timestamp do Firestore em formato brasileiro legível.
  */
-function formatarData(dataISO) {
-    if (!dataISO) return '-';
-    const data = new Date(dataISO);
+function formatarData(timestamp) {
+    if (!timestamp) return '-';
+    const data = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     return data.toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
     });
 }
 
 /**
- * Carrega os orçamentos salvos no Supabase e renderiza na tabela.
+ * Carrega os orçamentos salvos no Firestore e renderiza na tabela.
  */
 async function carregarHistorico() {
     const secaoHistorico = document.getElementById('secao-historico');
-    const loading = document.getElementById('historico-loading');
-    const vazio = document.getElementById('historico-vazio');
-    const erroDiv = document.getElementById('historico-erro');
-    const tabela = document.getElementById('tabela-historico');
-    const tbody = document.getElementById('historico-tbody');
+    const loading        = document.getElementById('historico-loading');
+    const vazio          = document.getElementById('historico-vazio');
+    const erroDiv        = document.getElementById('historico-erro');
+    const tabela         = document.getElementById('tabela-historico');
+    const tbody          = document.getElementById('historico-tbody');
 
-    // Só exibe a seção se o Supabase estiver configurado
-    if (!supabaseClient) {
-        return;
-    }
+    if (!db) return; // Só exibe se o Firebase estiver configurado
 
     secaoHistorico.classList.remove('hidden');
     loading.classList.remove('hidden');
@@ -181,24 +182,21 @@ async function carregarHistorico() {
     tabela.classList.add('hidden');
 
     try {
-        const { data, error } = await supabaseClient
-            .from('historico_calculos')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(20);
+        const snapshot = await db.collection('historico_calculos')
+            .orderBy('created_at', 'desc')
+            .limit(20)
+            .get();
 
         loading.classList.add('hidden');
 
-        if (error) throw error;
-
-        if (!data || data.length === 0) {
+        if (snapshot.empty) {
             vazio.classList.remove('hidden');
             return;
         }
 
-        // Renderiza as linhas da tabela
         tbody.innerHTML = '';
-        data.forEach(item => {
+        snapshot.forEach(doc => {
+            const item = doc.data();
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="td-nome">${item.nome_produto || '-'}</td>
@@ -208,13 +206,13 @@ async function carregarHistorico() {
                 <td class="td-endereco">${item.endereco_completo || '-'}</td>
                 <td class="td-data">${formatarData(item.created_at)}</td>
                 <td>
-                    <button class="btn-deletar" data-id="${item.id}" title="Excluir orçamento">🗑️</button>
+                    <button class="btn-deletar" data-id="${doc.id}" title="Excluir orçamento">🗑️</button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
 
-        // Adiciona evento de deletar em cada botão
+        // Evento de deletar em cada botão
         document.querySelectorAll('.btn-deletar').forEach(btn => {
             btn.addEventListener('click', () => deletarOrcamento(btn.dataset.id));
         });
@@ -229,21 +227,17 @@ async function carregarHistorico() {
 }
 
 /**
- * Deleta um orçamento pelo ID no Supabase e recarrega o histórico.
+ * Deleta um orçamento pelo ID no Firestore e recarrega o histórico.
  */
 async function deletarOrcamento(id) {
-    if (!supabaseClient) return;
+    if (!db) return;
     if (!confirm("Deseja realmente excluir este orçamento?")) return;
 
-    const { error } = await supabaseClient
-        .from('historico_calculos')
-        .delete()
-        .eq('id', id);
-
-    if (error) {
-        alert(`Erro ao excluir: ${error.message}`);
-    } else {
+    try {
+        await db.collection('historico_calculos').doc(id).delete();
         carregarHistorico();
+    } catch (erro) {
+        alert(`Erro ao excluir: ${erro.message}`);
     }
 }
 

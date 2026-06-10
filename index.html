@@ -60,8 +60,7 @@
                             <button id="btn-buscar-cep">Buscar</button>
                         </div>
                     </div>
-                    <div id="resultado-endereco" class="hidden alert-info">
-                        </div>
+                    <div id="resultado-endereco" class="hidden alert-info"></div>
                 </section>
     
                 <section id="resultado-calculo" class="card hidden">
@@ -107,15 +106,16 @@
                             <th>Ação</th>
                         </tr>
                     </thead>
-                    <tbody id="historico-tbody">
-                    </tbody>
+                    <tbody id="historico-tbody"></tbody>
                 </table>
             </div>
         </section>
 
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
