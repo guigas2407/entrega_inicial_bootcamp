@@ -3,7 +3,7 @@
 ![Badge de Versão](https://img.shields.io/badge/version-1.1.0-blue)
 ![Status do Workflow](https://img.shields.io/github/actions/workflow/status/guigas2407/entrega_inicial_bootcamp/ci.yml)
 
-🚀 **Acesse a aplicação online:** [COLE SEU LINK DO GITHUB PAGES AQUI]
+🚀 **Acesse a aplicação online:** [ApoioMicro: Calculadora de Precificação Justa](https://guigas2407.github.io/entrega_inicial_bootcamp/)
 
 ## 🎯 Descrição do Problema Real
 
