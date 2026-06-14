@@ -1,23 +1,29 @@
-// ══════════════════════════════════════════════════════
-//  CONFIGURAÇÃO DO SUPABASE (FRONTEND)
-// ══════════════════════════════════════════════════════
-const SUPABASE_URL = window.SUPABASE_URL || localStorage.getItem('SUPABASE_URL') || "SUA_URL_SUPABASE";
-const SUPABASE_KEY = window.SUPABASE_KEY || localStorage.getItem('SUPABASE_KEY') || "SUA_KEY_SUPABASE";
+// =======================================================
+// --- CONFIGURAÇÃO DO FIREBASE ---
+// =======================================================
 
-let supabaseClient = null;
+const firebaseConfig = {
+    apiKey: "AIzaSyCiApZxn4gav9ZAAC4f7a-EpAUxa0pzar4",
+    authDomain: "apoiomicro.firebaseapp.com",
+    projectId: "apoiomicro",
+    storageBucket: "apoiomicro.firebasestorage.app",
+    messagingSenderId: "968097490171",
+    appId: "1:968097490171:web:086d0bd341f9d1549abc5e"
+};
 
-if (
-    typeof supabase !== 'undefined' &&
-    SUPABASE_URL && SUPABASE_KEY &&
-    SUPABASE_URL !== "SUA_URL_SUPABASE" &&
-    SUPABASE_KEY !== "SUA_KEY_SUPABASE"
-) {
-    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    console.log("⚡ Supabase inicializado com sucesso no frontend!");
-    atualizarStatusBadge(true);
+// Inicializa o Firebase e o Firestore
+let db = null;
+
+const configValida = Object.values(firebaseConfig).every(v => !v.startsWith("COLE_AQUI"));
+
+if (configValida) {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    console.log("🔥 Firebase inicializado com sucesso!");
+    // Se você tiver uma função para atualizar o badge, chame-a aqui.
+    // atualizarStatusBadge(true); 
 } else {
-    console.warn("⚠️ Supabase não configurado no frontend. Para salvar os dados, defina SUPABASE_URL e SUPABASE_KEY no script.js ou via localStorage.");
-    atualizarStatusBadge(false);
+    // atualizarStatusBadge(false);
 }
 
 /**
@@ -177,9 +183,9 @@ document.getElementById('btn-calcular').addEventListener('click', () => {
             }, 100);
         }
 
-        // Salvar no Supabase
-        if (supabaseClient) {
-            supabaseClient.from('historico_calculos').insert([{
+        // Salvar no Firebase (Firestore)
+        if (db) {
+            db.collection('historico_calculos').add({
                 custo_materiais:  materiais,
                 horas_trabalhadas: horas,
                 valor_hora:       valorHora,
@@ -189,9 +195,11 @@ document.getElementById('btn-calcular').addEventListener('click', () => {
                 preco_sugerido:   precoSugerido,
                 cep:              ultimoCep || null,
                 endereco_completo: ultimoEndereco || null,
-            }]).then(({ error }) => {
-                if (error) console.error('Erro ao salvar no Supabase:', error.message);
-                else console.log('✅ Cálculo salvo com sucesso no Supabase!');
+                data:             new Date().toISOString() // Salva a data atual
+            }).then(() => {
+                console.log('✅ Cálculo salvo com sucesso no Firebase!');
+            }).catch((error) => {
+                console.error('Erro ao salvar no Firebase:', error);
             });
         }
 
