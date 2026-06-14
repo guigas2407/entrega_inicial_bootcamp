@@ -1,184 +1,138 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="ApoioMicro — Ferramenta gratuita de precificação inteligente para pequenos negócios. Calcule o preço justo dos seus produtos e serviços em segundos.">
-    <meta name="theme-color" content="#0d1117">
-    <meta name="robots" content="index, follow">
-
-    <!-- Open Graph -->
-    <meta property="og:title" content="ApoioMicro - Precificação Inteligente">
-    <meta property="og:description" content="Ajudando pequenos negócios a cobrar o preço justo.">
-    <meta property="og:type" content="website">
-
     <title>ApoioMicro - Precificação Inteligente</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
     <div class="container">
-
-        <!-- ── HEADER ──────────────────────────────────────────── -->
-        <header role="banner">
-            <div class="header-icon" aria-hidden="true">📦</div>
-            <h1>ApoioMicro</h1>
-            <p class="header-subtitle">Ajudando pequenos negócios a cobrar o preço justo.</p>
-            <div id="supabase-status" class="status-badge status-offline" aria-live="polite"
-                title="Status da conexão com o banco de dados">
-                <span class="status-dot" aria-hidden="true"></span>
+        <header>
+            <h1>📦 ApoioMicro</h1>
+            <p>Ajudando pequenos negócios a cobrar o preço justo.</p>
+            <div id="supabase-status" class="status-offline">
+                <span class="status-dot"></span>
                 <span class="status-text">Sem banco de dados</span>
             </div>
         </header>
 
-        <!-- ── MAIN LAYOUT ─────────────────────────────────────── -->
-        <main>
-            <div class="layout-duas-colunas">
-
-                <!-- COLUNA ESQUERDA: Calculadora -->
-                <div class="coluna-esquerda">
-                    <section class="card" aria-labelledby="titulo-calculadora">
-                        <h2 id="titulo-calculadora">
-                            <span aria-hidden="true">💰</span>
-                            Calculadora de Precificação
-                        </h2>
-
-                        <form id="form-calculadora" novalidate>
-                            <div class="input-group">
-                                <label for="materiais">Custo de Materiais</label>
-                                <div class="input-wrapper">
-                                    <span class="input-prefix" aria-hidden="true">R$</span>
-                                    <input type="number" id="materiais" name="materiais" placeholder="0,00" min="0"
-                                        step="0.01" inputmode="decimal" aria-describedby="materiais-hint">
-                                </div>
-                                <span id="materiais-hint" class="input-hint">Soma de todos os insumos usados</span>
-                            </div>
-
-                            <div class="input-row">
-                                <div class="input-group">
-                                    <label for="horas">Horas Trabalhadas</label>
-                                    <div class="input-wrapper">
-                                        <span class="input-prefix" aria-hidden="true">h</span>
-                                        <input type="number" id="horas" name="horas" placeholder="0" min="0"
-                                            inputmode="numeric">
-                                    </div>
-                                </div>
-
-                                <div class="input-group">
-                                    <label for="valor-hora">Valor da Hora</label>
-                                    <div class="input-wrapper">
-                                        <span class="input-prefix" aria-hidden="true">R$</span>
-                                        <input type="number" id="valor-hora" name="valor-hora" placeholder="0,00"
-                                            min="0" step="0.01" inputmode="decimal">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="input-group">
-                                <label for="margem">
-                                    Margem de Lucro Desejada
-                                    <span class="label-badge">%</span>
-                                </label>
-                                <div class="input-wrapper">
-                                    <input type="number" id="margem" name="margem" placeholder="Ex: 20" min="0" max="99"
-                                        inputmode="numeric" aria-describedby="margem-hint">
-                                    <span class="input-suffix" aria-hidden="true">%</span>
-                                </div>
-                                <span id="margem-hint" class="input-hint">Máximo 99%</span>
-                            </div>
-
-                            <div id="mensagem-erro" class="hidden alert-danger" role="alert" aria-live="assertive">
-                            </div>
-
-                            <button id="btn-calcular" type="submit" class="btn-primary"
-                                aria-label="Calcular preço de venda sugerido">
-                                <span aria-hidden="true">⚡</span>
-                                Calcular Preço de Venda
-                            </button>
-                        </form>
-                    </section>
-                </div>
-
-                <!-- COLUNA DIREITA: CEP + Resultado -->
-                <div class="coluna-direita">
-
-                    <!-- Dados do cliente -->
-                    <section class="card" aria-labelledby="titulo-cep">
-                        <h2 id="titulo-cep">
-                            <span aria-hidden="true">📍</span>
-                            Dados do Cliente
-                        </h2>
+        <div class="layout-duas-colunas">
+            
+            <div class="coluna-esquerda">
+                <section class="card">
+                    <h2>💰 Calculadora de Precificação</h2>
+                    <form id="form-calculadora" onsubmit="event.preventDefault();">
+                        
                         <div class="input-group">
-                            <label for="cep">CEP do cliente</label>
-                            <div class="cep-flex">
-                                <div class="input-wrapper" style="flex:1">
-                                    <input type="text" id="cep" name="cep" placeholder="00000-000" maxlength="9"
-                                        inputmode="numeric" autocomplete="postal-code"
-                                        aria-label="Digite o CEP do cliente">
-                                </div>
-                                <button id="btn-buscar-cep" type="button" aria-label="Buscar endereço pelo CEP">
-                                    <span aria-hidden="true">🔍</span>
-                                    <span class="btn-text">Buscar</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div id="resultado-endereco" class="hidden alert-info" role="status" aria-live="polite"></div>
-                    </section>
-
-                    <!-- Resumo do orçamento -->
-                    <section id="resultado-calculo" class="card hidden" aria-labelledby="titulo-resultado"
-                        aria-live="polite">
-                        <h2 id="titulo-resultado">
-                            <span aria-hidden="true">📊</span>
-                            Resumo do Orçamento
-                        </h2>
-
-                        <dl class="resultado-lista">
-                            <div class="resultado-item">
-                                <dt>Custo Total</dt>
-                                <dd id="res-custo" class="resultado-valor">R$ 0,00</dd>
-                            </div>
-                            <div class="resultado-item">
-                                <dt>Lucro Bruto</dt>
-                                <dd id="res-lucro" class="resultado-valor texto-verde">R$ 0,00</dd>
-                            </div>
-                        </dl>
-
-                        <div class="resultado-destaque" role="region" aria-label="Preço sugerido">
-                            <span class="destaque-label">Preço de Venda Sugerido</span>
-                            <strong id="res-preco" class="destaque-valor texto-azul">R$ 0,00</strong>
+                            <label for="nome-produto">Nome do Produto / Serviço:</label>
+                            <input type="text" id="nome-produto" placeholder="Ex: Bolo de Pote de Morango">
                         </div>
 
-                        <button id="btn-copiar" type="button" class="btn-secondary"
-                            aria-label="Copiar preço de venda para a área de transferência">
-                            <span aria-hidden="true">📋</span>
-                            Copiar Valor
-                        </button>
-                    </section>
-
-                </div>
+                        <div class="input-group">
+                            <label for="materiais">Custo de Materiais (R$):</label>
+                            <input type="number" id="materiais" placeholder="R$ 0,00" min="0" step="0.01">
+                            <small class="help-text">Soma de todos os insumos usados</small>
+                        </div>
+            
+                        <div class="input-group-row">
+                            <div class="input-group">
+                                <label for="horas">Horas Trabalhadas:</label>
+                                <input type="number" id="horas" placeholder="h 0" min="0">
+                            </div>
+            
+                            <div class="input-group">
+                                <label for="valor-hora">Valor da Hora:</label>
+                                <input type="number" id="valor-hora" placeholder="R$ 0,00" min="0" step="0.01">
+                            </div>
+                        </div>
+            
+                        <div class="input-group">
+                            <label for="margem">Margem de Lucro Desejada <span class="badge-percentage">%</span></label>
+                            <input type="number" id="margem" placeholder="Ex: 20" min="0" max="99">
+                            <small class="help-text">Máximo 99%</small>
+                        </div>
+            
+                        <button id="btn-calcular" type="button" class="btn-primary">⚡ Calcular Preço de Venda</button>
+                    </form>
+        
+                    <div id="mensagem-erro" class="hidden alert-danger"></div>
+                </section>
             </div>
-        </main>
 
-        <!-- ── FOOTER ──────────────────────────────────────────── -->
-        <footer role="contentinfo">
-            <p>Feito com <span aria-label="amor">❤️</span> para pequenos empreendedores</p>
-            <p class="footer-tech">
-                <span title="ViaCEP">ViaCEP API</span>
-                <span class="sep" aria-hidden="true">·</span>
-                <span title="Supabase">Supabase</span>
-                <span class="sep" aria-hidden="true">·</span>
-                <span title="JavaScript Vanilla">Vanilla JS</span>
-            </p>
-        </footer>
+            <div class="coluna-direita">
+                <section class="card">
+                    <h2>📍 Dados do Cliente</h2>
+                    <div class="input-group">
+                        <label for="cep">CEP do Cliente</label>
+                        <div class="cep-flex">
+                            <input type="text" id="cep" placeholder="00000-000">
+                            <button id="btn-buscar-cep" type="button">🔍 Buscar</button>
+                        </div>
+                    </div>
+                    <div id="resultado-endereco" class="hidden">
+                        </div>
+                </section>
+        
+                <section id="resultado-calculo" class="card hidden">
+                    <h2>📊 Resumo do Orçamento</h2>
+                    
+                    <div class="resultado-item" id="container-res-nome" style="margin-bottom: 15px; font-size: 1.1rem;">
+                        <span>Produto:</span>
+                        <strong id="res-nome" style="color: #3498db;">-</strong>
+                    </div>
 
+                    <div class="resultado-item">
+                        <span>Custo Total:</span>
+                        <strong id="res-custo">R$ 0,00</strong>
+                    </div>
+                    <div class="resultado-item">
+                        <span>Lucro Bruto:</span>
+                        <strong id="res-lucro" class="texto-verde">R$ 0,00</strong>
+                    </div>
+                    <hr>
+                    <div class="resultado-item destaque">
+                        <span>Preço de Venda Sugerido:</span>
+                        <strong id="res-preco" class="texto-azul">R$ 0,00</strong>
+                    </div>
+                    
+                    <button id="btn-copiar" class="btn-secondary" style="width:100%; margin-top:15px;">📋 Copiar Valor</button>
+                </section>
+            </div>
+        </div>
+
+        <section class="card" id="secao-historico" style="margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 15px;">
+                <h2 style="border: none; margin: 0;">📜 Histórico de Orçamentos Recentes</h2>
+                <button id="btn-atualizar-historico" class="btn-secondary" style="padding: 5px 10px; font-size: 0.85rem;">🔄 Atualizar</button>
+            </div>
+            
+            <div id="status-historico" style="text-align: center; color: #888; padding: 20px 0;">
+                Carregando histórico...
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table id="tabela-historico" style="width: 100%; border-collapse: collapse; text-align: left; display: none;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #555; color: #aaa; font-size: 0.9rem;">
+                            <th style="padding: 10px;">Produto</th>
+                            <th style="padding: 10px;">Custo Total</th>
+                            <th style="padding: 10px;">Preço Sugerido</th>
+                            <th style="padding: 10px;">Margem</th>
+                            <th style="padding: 10px;">Endereço</th>
+                            <th style="padding: 10px; text-align: center;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo-historico">
+                        </tbody>
+                </table>
+            </div>
+        </section>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <script src="script.js"></script>
 </body>
-
 </html>
