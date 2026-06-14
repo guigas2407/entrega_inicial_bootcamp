@@ -20,10 +20,9 @@ if (configValida) {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     console.log("🔥 Firebase inicializado com sucesso!");
-    // Se você tiver uma função para atualizar o badge, chame-a aqui.
-    // atualizarStatusBadge(true); 
+    atualizarStatusBadge(true); 
 } else {
-    // atualizarStatusBadge(false);
+    atualizarStatusBadge(false);
 }
 
 /**
