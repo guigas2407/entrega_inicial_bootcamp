@@ -248,3 +248,97 @@ if (btnCopiar) {
         }
     });
 }
+
+
+// ══════════════════════════════════════════════════════
+//  4. LÓGICA DO HISTÓRICO DE ORÇAMENTOS (FIREBASE)
+// ══════════════════════════════════════════════════════
+
+async function carregarHistorico() {
+    const statusEl = document.getElementById('status-historico');
+    const tabela = document.getElementById('tabela-historico');
+    const corpoTabela = document.getElementById('corpo-historico');
+
+    // Se o banco não estiver conectado, avisa e para.
+    if (!db) {
+        if(statusEl) statusEl.innerHTML = "⚠️ Banco de dados não conectado.";
+        return;
+    }
+
+    if(statusEl) statusEl.innerHTML = "⏳ Carregando histórico...";
+    if(statusEl) statusEl.style.display = 'block';
+    if(tabela) tabela.style.display = 'none';
+
+    try {
+        // Puxa os dados da coleção 'historico_calculos' do Firebase
+        const snapshot = await db.collection('historico_calculos').get();
+
+        if (snapshot.empty) {
+            statusEl.innerHTML = "Nenhum orçamento salvo ainda.";
+            return;
+        }
+
+        // Limpa a tabela antes de preencher
+        corpoTabela.innerHTML = ''; 
+
+        // Roda por cada orçamento salvo no banco e cria uma linha na tabela
+        snapshot.forEach(doc => {
+            const dados = doc.data();
+            const id = doc.id;
+            
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid #333';
+
+            // Formatações
+            const formatBRL = (v) => v ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-';
+            const produto = dados.nome_produto || 'Produto sem nome';
+            const custo = formatBRL(dados.custo_total);
+            const preco = formatBRL(dados.preco_sugerido);
+            const margem = dados.margem_lucro ? `${dados.margem_lucro}%` : '-';
+            const endereco = dados.endereco_completo || 'Não informado';
+
+            tr.innerHTML = `
+                <td style="padding: 12px 10px;">${produto}</td>
+                <td style="padding: 12px 10px;">${custo}</td>
+                <td style="padding: 12px 10px; color: #3498db; font-weight: bold;">${preco}</td>
+                <td style="padding: 12px 10px;">${margem}</td>
+                <td style="padding: 12px 10px; font-size: 0.85rem; color: #aaa;">${endereco}</td>
+                <td style="padding: 12px 10px; text-align: center;">
+                    <button onclick="deletarOrcamento('${id}')" style="background: transparent; border: 1px solid #e74c3c; padding: 5px 8px; border-radius: 4px; color: #e74c3c; cursor: pointer; transition: 0.2s;">
+                        Excluir
+                    </button>
+                </td>
+            `;
+            corpoTabela.appendChild(tr);
+        });
+
+        // Esconde o aviso de carregando e mostra a tabela
+        statusEl.style.display = 'none';
+        tabela.style.display = 'table';
+
+    } catch (erro) {
+        console.error("Erro ao buscar histórico:", erro);
+        statusEl.innerHTML = "❌ Erro ao carregar o histórico.";
+    }
+}
+
+// Função para deletar um orçamento específico
+window.deletarOrcamento = async function(id) {
+    if(confirm("Tem certeza que deseja apagar este orçamento?")) {
+        try {
+            await db.collection('historico_calculos').doc(id).delete();
+            carregarHistorico(); // Recarrega a tabela na hora
+        } catch(e) {
+            alert("Erro ao deletar: " + e.message);
+        }
+    }
+};
+
+// Conecta o botão "Atualizar" à função
+const btnAtualizar = document.getElementById('btn-atualizar-historico');
+if(btnAtualizar) {
+    btnAtualizar.addEventListener('click', carregarHistorico);
+}
+
+// Faz o histórico carregar automaticamente 1 segundo após abrir a página
+setTimeout(carregarHistorico, 1500);
